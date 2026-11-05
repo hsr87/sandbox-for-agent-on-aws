@@ -1,0 +1,5 @@
+# Same app, with one full agent task run during start-up, before any snapshot.
+ARG BASE
+FROM ${BASE}
+COPY warm_entry.py /app/warm_entry.py
+CMD ["python", "/app/warm_entry.py"]

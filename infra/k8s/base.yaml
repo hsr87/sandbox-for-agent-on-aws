@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Namespace
+metadata: { name: sandboxes }
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: bench }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: sandbox, namespace: sandboxes }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: driver, namespace: bench }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: bench-driver-admin }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: cluster-admin }
+subjects: [{ kind: ServiceAccount, name: driver, namespace: bench }]
+---
+apiVersion: v1
+kind: Pod
+metadata: { name: driver, namespace: bench }
+spec:
+  serviceAccountName: driver
+  nodeSelector: { bench/group: system }
+  containers:
+  - name: driver
+    image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sbx-bench/agent:driver
+    resources: { requests: { cpu: "1", memory: 2Gi } }
+---
+# Host-level helper: reads node memory, clears image cache for the uncached cold-start case.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: { name: hostops, namespace: bench }
+spec:
+  selector: { matchLabels: { app: hostops } }
+  template:
+    metadata: { labels: { app: hostops } }
+    spec:
+      hostPID: true
+      nodeSelector: {}
+      tolerations: [{ operator: Exists }]
+      containers:
+      - name: h
+        image: public.ecr.aws/docker/library/debian:bookworm-slim
+        command: ["sleep", "infinity"]
+        securityContext: { privileged: true }
+        resources: { requests: { cpu: 10m, memory: 16Mi } }
+---
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata: { name: gvisor }
+handler: runsc
+scheduling: { nodeSelector: { bench/runtime: gvisor } }

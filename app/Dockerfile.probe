@@ -1,0 +1,5 @@
+# Unchanged app and SDK. Only registers one extra read-only probe.
+ARG BASE
+FROM ${BASE}
+COPY probe_entry.py /app/probe_entry.py
+CMD ["python", "/app/probe_entry.py"]

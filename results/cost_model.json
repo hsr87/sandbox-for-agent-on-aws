@@ -1,0 +1,260 @@
+{
+ "prices": {
+  "as_of": "2026-11-03",
+  "region": "us-east-1",
+  "agentcore_v1": {
+   "vcpu_h": 0.0895,
+   "gb_h": 0.00945,
+   "source": "aws.amazon.com/bedrock/agentcore/pricing"
+  },
+  "agentcore_v2": {
+   "vcpu_h": 0.1276,
+   "gb_h": 0.0169,
+   "source": "aws.amazon.com/bedrock/agentcore/pricing, consumption rate"
+  },
+  "microvm_arm": {
+   "vcpu_s": 2.76944e-05,
+   "gb_s": 3.6667e-06,
+   "snap_read_gb": 0.0015467699,
+   "snap_write_gb": 0.0037977138,
+   "snap_storage_gb_month": 0.08,
+   "source": "AWS Pricing API, aws.amazon.com/lambda/pricing"
+  },
+  "ec2": {
+   "m8i.2xlarge": 0.42336,
+   "m7g.2xlarge": 0.3264,
+   "m7i.large": 0.1008,
+   "source": "AWS Pricing API, on-demand"
+  },
+  "eks_cluster_h": 0.1,
+  "nat_h": 0.045,
+  "public_ipv4_h": 0.005,
+  "gp3_node_month": 34.0
+ },
+ "measured_inputs": {
+  "ac_v1": {
+   "short": {
+    "idle_gb": 3.0048383164881085,
+    "idle_vcpu": 0.05977830191723924
+   },
+   "long": {
+    "idle_gb": 2.8649492284222102,
+    "idle_vcpu": 0.043022130317309594
+   },
+   "tail_gb": 2.4463166666666667
+  },
+  "ac_v2": {
+   "short": {
+    "idle_gb": 1.1308320495420303,
+    "idle_vcpu": 0.0231224210388338
+   },
+   "long": {
+    "idle_gb": 1.0316968752049014,
+    "idle_vcpu": 0.01931933280886252
+   },
+   "tail_gb": 0.8311166666666667
+  },
+  "gvisor_overhead_gb": 0.05699729919433594,
+  "kata_overhead_gb": 0.3659393310546875
+ },
+ "assumptions": "Scenario values are illustrations, not measurements. EKS autoscaled means 25% headroom over average; peak means sized for peak at all times.",
+ "scenarios": {
+  "interactive": {
+   "label": "Interactive assistant",
+   "sessions_per_day": 5000,
+   "minutes": 10,
+   "cpu_active": 0.05,
+   "extra_gb": 0.3,
+   "peak_to_avg": 3,
+   "running_share": 0.3,
+   "microvm_tested_size": 6624.179744800001,
+   "agentcore_v1_no_stop": 2199.279222422857,
+   "agentcore_v2_no_stop": 1652.588643012344,
+   "eks_gvisor_autoscaled_warm30": 1353.8264,
+   "eks_gvisor_autoscaled_mem_high": 1353.8264,
+   "eks_gvisor_autoscaled_graviton3": 869.212,
+   "eks_gvisor_autoscaled_existing_cluster": 686.1056,
+   "eks_kata_autoscaled_existing_cluster": 1029.1584,
+   "eks_kata_autoscaled_mem_high": 1353.8264,
+   "avg_concurrency": 34.72222222222222,
+   "agentcore_v1": 1066.758642213687,
+   "agentcore_v2": 832.5099387553981,
+   "microvm_always_running": 3429.6443848000004,
+   "microvm_with_suspend": 6071.579507940743,
+   "eks_gvisor_autoscaled": 1010.7736,
+   "eks_gvisor_peak": 1696.8792,
+   "eks_kata_autoscaled": 1353.8264,
+   "eks_kata_peak": 2726.0376,
+   "nodes": {
+    "gvisor_autoscaled": 2,
+    "gvisor_peak": 4,
+    "kata_autoscaled": 3,
+    "kata_peak": 7
+   },
+   "sandboxes_per_node": {
+    "gvisor": 31.6,
+    "kata": 15.8
+   }
+  },
+  "code_exec": {
+   "label": "Short code execution",
+   "sessions_per_day": 50000,
+   "minutes": 0.5,
+   "cpu_active": 0.5,
+   "extra_gb": 0.3,
+   "peak_to_avg": 3,
+   "running_share": 1.0,
+   "microvm_tested_size": 5545.625608,
+   "agentcore_v1_no_stop": 12409.53666369854,
+   "agentcore_v2_no_stop": 9434.295343169379,
+   "eks_gvisor_autoscaled_warm30": 1696.8792,
+   "eks_gvisor_autoscaled_mem_high": 1010.7736,
+   "eks_gvisor_autoscaled_graviton3": 869.212,
+   "eks_gvisor_autoscaled_existing_cluster": 686.1056,
+   "eks_kata_autoscaled_existing_cluster": 1029.1584,
+   "eks_kata_autoscaled_mem_high": 1353.8264,
+   "avg_concurrency": 17.36111111111111,
+   "agentcore_v1": 1084.3308616068432,
+   "agentcore_v2": 1233.508300599921,
+   "microvm_always_running": 3948.3579280000004,
+   "microvm_with_suspend": 3948.3579280000004,
+   "eks_gvisor_autoscaled": 1010.7736,
+   "eks_gvisor_peak": 1696.8792,
+   "eks_kata_autoscaled": 1353.8264,
+   "eks_kata_peak": 2039.932,
+   "nodes": {
+    "gvisor_autoscaled": 2,
+    "gvisor_peak": 4,
+    "kata_autoscaled": 3,
+    "kata_peak": 5
+   },
+   "sandboxes_per_node": {
+    "gvisor": 15.8,
+    "kata": 10.533333333333333
+   }
+  },
+  "coding": {
+   "label": "Coding agent with builds",
+   "sessions_per_day": 500,
+   "minutes": 60,
+   "cpu_active": 0.3,
+   "extra_gb": 2.0,
+   "peak_to_avg": 3,
+   "running_share": 0.6,
+   "microvm_tested_size": 3856.95333448,
+   "agentcore_v1_no_stop": 1345.5548281045849,
+   "agentcore_v2_no_stop": 1589.7792707951396,
+   "eks_gvisor_autoscaled_warm30": 2039.932,
+   "eks_gvisor_autoscaled_mem_high": 1353.8264,
+   "eks_gvisor_autoscaled_graviton3": 1141.484,
+   "eks_gvisor_autoscaled_existing_cluster": 1029.1584,
+   "eks_kata_autoscaled_existing_cluster": 1029.1584,
+   "eks_kata_autoscaled_mem_high": 1696.8792,
+   "avg_concurrency": 20.833333333333332,
+   "agentcore_v1": 1171.2557700836678,
+   "agentcore_v2": 1398.597400369445,
+   "microvm_always_running": 3856.95333448,
+   "microvm_with_suspend": 3301.1124107822225,
+   "eks_gvisor_autoscaled": 1353.8264,
+   "eks_gvisor_peak": 2382.9848,
+   "eks_kata_autoscaled": 1353.8264,
+   "eks_kata_peak": 2382.9848,
+   "nodes": {
+    "gvisor_autoscaled": 3,
+    "gvisor_peak": 6,
+    "kata_autoscaled": 3,
+    "kata_peak": 6
+   },
+   "sandboxes_per_node": {
+    "gvisor": 12.303790084915551,
+    "kata": 10.877966974787512
+   }
+  },
+  "build_heavy": {
+   "label": "Build-heavy agents, mostly on CPU",
+   "sessions_per_day": 500,
+   "minutes": 60,
+   "cpu_active": 1.5,
+   "extra_gb": 2.0,
+   "peak_to_avg": 3,
+   "running_share": 0.8,
+   "microvm_tested_size": 3856.95333448,
+   "agentcore_v1_no_stop": 2978.0348281045844,
+   "agentcore_v2_no_stop": 3917.2032707951385,
+   "eks_gvisor_autoscaled_warm30": 4098.2488,
+   "eks_gvisor_autoscaled_mem_high": 2039.932,
+   "eks_gvisor_autoscaled_graviton3": 1686.028,
+   "eks_gvisor_autoscaled_existing_cluster": 1715.264,
+   "eks_kata_autoscaled_existing_cluster": 2058.3168,
+   "eks_kata_autoscaled_mem_high": 2382.9848,
+   "avg_concurrency": 20.833333333333332,
+   "agentcore_v1": 2803.7357700836674,
+   "agentcore_v2": 3726.021400369444,
+   "microvm_always_running": 3856.95333448,
+   "microvm_with_suspend": 4066.4497860711112,
+   "eks_gvisor_autoscaled": 2039.932,
+   "eks_gvisor_peak": 4441.301600000001,
+   "eks_kata_autoscaled": 2382.9848,
+   "eks_kata_peak": 5127.407200000001,
+   "nodes": {
+    "gvisor_autoscaled": 5,
+    "gvisor_peak": 12,
+    "kata_autoscaled": 6,
+    "kata_peak": 14
+   },
+   "sandboxes_per_node": {
+    "gvisor": 5.266666666666667,
+    "kata": 4.514285714285714
+   }
+  },
+  "steady": {
+   "label": "Steady high concurrency",
+   "sessions_per_day": 288000,
+   "minutes": 1,
+   "cpu_active": 0.2,
+   "extra_gb": 0.3,
+   "peak_to_avg": 1.3,
+   "running_share": 1.0,
+   "microvm_tested_size": 50343.327175679995,
+   "agentcore_v1_no_stop": 73847.81747695903,
+   "agentcore_v2_no_stop": 55824.15167611117,
+   "eks_gvisor_autoscaled_warm30": 3412.1432000000004,
+   "eks_gvisor_autoscaled_mem_high": 4784.3544,
+   "eks_gvisor_autoscaled_graviton3": 2502.844,
+   "eks_gvisor_autoscaled_existing_cluster": 2744.4224,
+   "eks_kata_autoscaled_existing_cluster": 5488.8448,
+   "eks_kata_autoscaled_mem_high": 5813.5128,
+   "avg_concurrency": 200.0,
+   "agentcore_v1": 8614.632056910837,
+   "agentcore_v2": 8587.618310911093,
+   "microvm_always_running": 31942.803502079998,
+   "microvm_with_suspend": 31942.803502079998,
+   "eks_gvisor_autoscaled": 3069.0904,
+   "eks_gvisor_peak": 3412.1432000000004,
+   "eks_kata_autoscaled": 5813.5128,
+   "eks_kata_peak": 6156.5656,
+   "nodes": {
+    "gvisor_autoscaled": 8,
+    "gvisor_peak": 9,
+    "kata_autoscaled": 16,
+    "kata_peak": 17
+   },
+   "sandboxes_per_node": {
+    "gvisor": 31.6,
+    "kata": 15.8
+   }
+  }
+ },
+ "gvisor_stays_cheaper_from": 57,
+ "gvisor_warm30_stays_cheaper_from": 86,
+ "break_even_concurrency_interactive_gvisor_vs_v2": 43,
+ "break_even_concurrency_interactive_gvisor_peak_vs_v2": null,
+ "break_even_concurrency_interactive_gvisor_warm30_vs_v2": 71,
+ "aws_example_check": {
+  "agentcore_v2_support_monthly_1m": 6703.75,
+  "aws_says_agentcore_v2": 6703,
+  "microvm_ci_monthly_10k": 1123.9627580000003,
+  "aws_says_microvm_ci": 1124.03
+ },
+ "suspend_breakeven_idle_s_smallest": 305.1566869743461
+}

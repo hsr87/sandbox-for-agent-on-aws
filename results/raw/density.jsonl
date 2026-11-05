@@ -1,0 +1,11 @@
+{"exp": "density", "round": "r1", "ts": 1793747327.669379, "backend": "eks-x86-runc", "sandboxes": 0, "mem_avail_kb": 31209732, "mem_total_kb": 32313748}
+{"exp": "density", "round": "r1", "ts": 1793747389.0847228, "backend": "eks-x86-runc", "sandboxes": 5, "mem_avail_kb": 31043592, "mem_total_kb": 32313748, "used_delta_mb_per_sandbox": 32.44921875}
+{"exp": "density", "round": "r1", "ts": 1793747450.398141, "backend": "eks-x86-runc", "sandboxes": 10, "mem_avail_kb": 30889484, "mem_total_kb": 32313748, "used_delta_mb_per_sandbox": 31.27421875}
+{"exp": "density", "round": "r1", "ts": 1793747513.2178228, "backend": "eks-x86-runc", "sandboxes": 20, "mem_avail_kb": 30563932, "mem_total_kb": 32313748, "used_delta_mb_per_sandbox": 31.533203125}
+{"exp": "density", "round": "r1", "ts": 1793748175.3857737, "backend": "eks-x86-gvisor", "sandboxes": 0, "mem_avail_kb": 31056008, "mem_total_kb": 32313744}
+{"exp": "density", "round": "r1", "ts": 1793748236.9389787, "backend": "eks-x86-gvisor", "sandboxes": 5, "mem_avail_kb": 30782592, "mem_total_kb": 32313744, "used_delta_mb_per_sandbox": 53.4015625}
+{"exp": "density", "round": "r1", "ts": 1793748298.4098642, "backend": "eks-x86-gvisor", "sandboxes": 10, "mem_avail_kb": 30476632, "mem_total_kb": 32313744, "used_delta_mb_per_sandbox": 56.5796875}
+{"exp": "density", "round": "r1", "ts": 1793748361.2879546, "backend": "eks-x86-gvisor", "sandboxes": 20, "mem_avail_kb": 29860688, "mem_total_kb": 32313744, "used_delta_mb_per_sandbox": 58.365234375}
+{"exp": "density", "round": "r1", "ts": 1793748860.7208347, "backend": "eks-x86-kata", "sandboxes": 0, "mem_avail_kb": 30153424, "mem_total_kb": 32313748}
+{"exp": "density", "round": "r1", "ts": 1793748925.5981445, "backend": "eks-x86-kata", "sandboxes": 5, "mem_avail_kb": 28266048, "mem_total_kb": 32313748, "used_delta_mb_per_sandbox": 368.628125}
+{"exp": "density", "round": "r1", "ts": 1793748990.4887881, "backend": "eks-x86-kata", "sandboxes": 10, "mem_avail_kb": 26316272, "mem_total_kb": 32313748, "used_delta_mb_per_sandbox": 374.721875}

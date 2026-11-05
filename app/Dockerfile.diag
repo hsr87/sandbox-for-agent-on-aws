@@ -1,0 +1,5 @@
+# Same app, with the CLI's debug log and child process counters added to each agent result.
+ARG BASE
+FROM ${BASE}
+COPY agent_runner.py /app/agent_runner.py
+ENV AGENT_DIAG=1

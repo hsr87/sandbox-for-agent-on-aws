@@ -1,0 +1,5 @@
+# Same app, but the CLI binary is run and read during start-up, before any snapshot.
+ARG BASE
+FROM ${BASE}
+COPY prewarm_entry.py /app/prewarm_entry.py
+CMD ["python", "/app/prewarm_entry.py"]

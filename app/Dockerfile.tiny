@@ -1,0 +1,7 @@
+# The same server without the agent SDK, to separate image size from deployment mode.
+FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm
+RUN pip install --no-cache-dir -q starlette==0.47.2 "uvicorn==0.35.0"
+COPY server.py bench_ops.py security_probe.py agent_runner.py /app/
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1 PING_NO_TIMESTAMP=1
+CMD ["python", "server.py"]

@@ -1,0 +1,5 @@
+# Same app, with the CLI binary mapped and locked in memory before any snapshot.
+ARG BASE
+FROM ${BASE}
+COPY pin_entry.py /app/pin_entry.py
+CMD ["python", "/app/pin_entry.py"]

@@ -1,0 +1,10 @@
+{"exp": "state_wipe", "round": "r1", "ts": 1793723213.2236094, "backend": "ac-v1", "i": 0, "ok": true, "same_instance": false, "memory": null, "disk": null}
+{"exp": "state_wipe", "round": "r1", "ts": 1793723219.7036586, "backend": "ac-v1", "i": 1, "ok": true, "same_instance": false, "memory": null, "disk": null}
+{"exp": "state_wipe", "round": "r1", "ts": 1793723226.7048545, "backend": "ac-v1", "i": 2, "ok": true, "same_instance": false, "memory": null, "disk": null}
+{"exp": "state_wipe", "round": "r1", "ts": 1793723233.324725, "backend": "ac-v1", "i": 3, "ok": true, "same_instance": false, "memory": null, "disk": null}
+{"exp": "state_wipe", "round": "r1", "ts": 1793723239.8046095, "backend": "ac-v1", "i": 4, "ok": true, "same_instance": false, "memory": null, "disk": null}
+{"exp": "state_wipe", "round": "r1", "ts": 1793723249.338684, "backend": "ac-v2", "i": 0, "ok": true, "same_instance": false, "memory": null, "disk": null}
+{"exp": "state_wipe", "round": "r1", "ts": 1793723258.3940785, "backend": "ac-v2", "i": 1, "ok": true, "same_instance": false, "memory": null, "disk": null}
+{"exp": "state_wipe", "round": "r1", "ts": 1793723267.524055, "backend": "ac-v2", "i": 2, "ok": true, "same_instance": false, "memory": null, "disk": null}
+{"exp": "state_wipe", "round": "r1", "ts": 1793723277.5185347, "backend": "ac-v2", "i": 3, "ok": true, "same_instance": false, "memory": null, "disk": null}
+{"exp": "state_wipe", "round": "r1", "ts": 1793723286.4493048, "backend": "ac-v2", "i": 4, "ok": true, "same_instance": false, "memory": null, "disk": null}

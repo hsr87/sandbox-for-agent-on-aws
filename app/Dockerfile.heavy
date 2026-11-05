@@ -1,0 +1,4 @@
+# Same app with 10 s of simulated start-up work (for example, loading a model).
+ARG BASE
+FROM ${BASE}
+ENV INIT_SECONDS=10

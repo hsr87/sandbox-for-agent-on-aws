@@ -1,0 +1,4 @@
+# Same app plus incompressible padding, to test how cold start reacts to image size.
+ARG BASE
+FROM ${BASE}
+RUN head -c 1200000000 /dev/urandom > /opt/padding.bin

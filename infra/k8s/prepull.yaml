@@ -1,0 +1,20 @@
+# Puts the agent image on every x86 bench node so that the burst test measures sandbox start, not image pull.
+# Image pull cost is measured separately in the cold_uncached experiment.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: { name: prepull, namespace: bench }
+spec:
+  selector: { matchLabels: { app: prepull } }
+  template:
+    metadata: { labels: { app: prepull } }
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - { key: bench/group, operator: In, values: [x86-runc, x86-gvisor, x86-kata] }
+      initContainers:
+      - { name: pull, image: "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sbx-bench/agent:base-amd64", command: ["true"], resources: { requests: { cpu: 1m, memory: 1Mi } } }
+      containers:
+      - { name: pause, image: "public.ecr.aws/eks-distro/kubernetes/pause:3.10", resources: { requests: { cpu: 1m, memory: 1Mi } } }

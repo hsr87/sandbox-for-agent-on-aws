@@ -1,0 +1,5 @@
+# Same app, with the /ping response the AgentCore HTTP contract asks for.
+ARG BASE
+FROM ${BASE}
+COPY server.py /app/server.py
+ENV PING_NO_TIMESTAMP=1

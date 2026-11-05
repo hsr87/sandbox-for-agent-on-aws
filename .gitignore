@@ -1,0 +1,15 @@
+.DS_Store
+reference/
+.terraform/
+*.tfstate*
+*.tfvars
+__pycache__/
+.venv/
+node_modules/
+.env
+results/raw_private/
+tf.plan
+.terraform.lock.hcl.bak
+output/
+*.pdf
+*.pptx
