@@ -1,0 +1,2 @@
+{"exp": "x_kp_trace", "round": "kpa", "ts": 1793873150.5541546, "sessions": 424, "drain_s": 90.18105756299337, "keep": false}
+{"exp": "x_kp_trace", "round": "kpb", "ts": 1793879257.0047061, "sessions": 389, "drain_s": 102.23093670498929, "keep": true}

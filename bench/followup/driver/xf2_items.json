@@ -1,0 +1,1 @@
+[{"backend": "xf2-image", "arm": "image"}, {"backend": "xf2-store", "arm": "store", "path": "/mnt/workspace/claude", "resume": true}, {"backend": "xf2-tmp", "arm": "tmp", "path": "/tmp/cli/claude"}]

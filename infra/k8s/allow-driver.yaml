@@ -1,0 +1,11 @@
+# agent-sandbox creates a NetworkPolicy per warm pool that admits only its sandbox-router.
+# With VPC CNI network policy enforcement on, the benchmark driver also needs ingress to port 8080.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: allow-bench-driver, namespace: sandboxes }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+  - from: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: bench } } }]
+    ports: [{ port: 8080, protocol: TCP }]

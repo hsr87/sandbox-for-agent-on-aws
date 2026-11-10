@@ -20,6 +20,8 @@ PRICES = {
     "agentcore_v2": {"vcpu_h": 0.1276, "gb_h": 0.0169, "source": "aws.amazon.com/bedrock/agentcore/pricing, consumption rate"},
     "microvm_arm": {"vcpu_s": 0.0000276944, "gb_s": 0.0000036667, "snap_read_gb": 0.0015467699, "snap_write_gb": 0.0037977138, "snap_storage_gb_month": 0.08, "source": "AWS Pricing API, aws.amazon.com/lambda/pricing"},
     "ec2": {"m8i.2xlarge": 0.42336, "m7g.2xlarge": 0.3264, "m7i.large": 0.1008, "source": "AWS Pricing API, on-demand"},
+    "fargate_x86": {"vcpu_h": 0.04048, "gb_h": 0.004445, "source": "AWS Pricing API, USE1-Fargate-vCPU-Hours:perCPU and USE1-Fargate-GB-Hours"},
+    "eks_auto_m8i.2xlarge_h": 0.0508,  # AWS Pricing API, EKS-Auto:m8i.2xlarge-management-hours
     "eks_cluster_h": 0.10,
     "nat_h": 0.045,
     "public_ipv4_h": 0.005,
@@ -98,6 +100,30 @@ def eks(s, overhead_gb, cpu_overhead, autoscaled, base_gb=0.3, warm_pods=0, inst
     return (nodes * PRICES["ec2"][instance] + fixed_h) * HOURS + disks, nodes, per_node
 
 
+FARGATE_SIZES = [(0.25, [0.5, 1, 2])] + [(0.5, [1, 2, 3, 4])] + [(1, list(range(2, 9)))] + [(2, list(range(4, 17)))] + [(4, list(range(8, 31)))]
+
+
+def fargate(s, startup_s, size=None):
+    """EKS Fargate: one microVM per sandbox pod, sized from the pod requests plus 256 MiB, billed per second
+    from the image pull until the pod ends, with a one minute minimum. The cluster's fixed costs are as for EKS."""
+    p = PRICES["fargate_x86"]
+    cpu_need, gb_need = max(0.25, s["cpu_active"]), s["extra_gb"] + 0.3 + 0.25
+    cpu, gb = size or next((c, m) for c, ms in FARGATE_SIZES for m in ms if c >= cpu_need and m >= gb_need)
+    sec = max(60, s["minutes"] * 60 + startup_s)
+    per = sec / 3600 * (cpu * p["vcpu_h"] + gb * p["gb_h"])
+    fixed_h = PRICES["eks_cluster_h"] + PRICES["nat_h"] + PRICES["public_ipv4_h"] + 2 * PRICES["ec2"]["m7i.large"]
+    return per * s["sessions_per_day"] * DAYS + fixed_h * HOURS + 2 * PRICES["gp3_node_month"], (cpu, gb)
+
+
+def nitro(s, auto_mode=True, autoscaled=True):
+    """Nitro Sandboxes on EC2 nodes: the VM gets its requests, and memory is reserved in full, plus the
+    256 MiB pod overhead that the isolated-sandbox RuntimeClass declares. Auto Mode adds its per-node fee."""
+    cost, nodes, per_node = eks(s, 0.25, 0, autoscaled)
+    if auto_mode:
+        cost += nodes * PRICES["eks_auto_m8i.2xlarge_h"] * HOURS
+    return cost, nodes, per_node
+
+
 def check_against_aws_examples():
     """Reproduces the worked examples on the public pricing pages, so a formula error cannot pass unnoticed."""
     c, m = PRICES["agentcore_v2"]["vcpu_h"], PRICES["agentcore_v2"]["gb_h"]
@@ -110,6 +136,8 @@ def check_against_aws_examples():
 
 def main():
     sm = json.loads((ROOT / "results" / "summary.json").read_text())
+    fu = json.loads((ROOT / "results" / "followup.json").read_text()).get("new", {})
+    fg_start = fu["fg"]["cold"]["fg-fs"]["p50"] if "fg" in fu else 57.0
     dens = sm["density"]
     def ov(b):
         return [d["used_delta_mb_per_sandbox"] for d in dens[b] if d.get("used_delta_mb_per_sandbox")][-1] / 1024
@@ -132,6 +160,14 @@ def main():
             "eks_gvisor_autoscaled_existing_cluster": eks(s, gv, 0, True, existing_cluster=True)[0],
             "eks_kata_autoscaled_existing_cluster": eks(s, kt, 0.25, True, existing_cluster=True)[0],
             "eks_kata_autoscaled_mem_high": eks(s, kt, 0.25, True, base_gb=high)[0],
+            "fargate": fargate(s, fg_start)[0],
+            "fargate_size": fargate(s, fg_start)[1],
+            "fargate_tested_size": fargate(s, fg_start, (2, 8))[0],  # 2 vCPU / 8 GB as tested: Fargate cannot burst past its size
+            "nitro_auto_autoscaled": nitro(s)[0],
+            "nitro_auto_peak": nitro(s, autoscaled=False)[0],
+            "nitro_custom_ami_autoscaled": nitro(s, auto_mode=False)[0],
+            "nitro_auto_autoscaled_existing_cluster": nitro(s)[0] - (PRICES["eks_cluster_h"] + PRICES["nat_h"] + PRICES["public_ipv4_h"] + 2 * PRICES["ec2"]["m7i.large"]) * HOURS - 2 * PRICES["gp3_node_month"],
+            "fargate_existing_cluster": fargate(s, fg_start)[0] - (PRICES["eks_cluster_h"] + PRICES["nat_h"] + PRICES["public_ipv4_h"] + 2 * PRICES["ec2"]["m7i.large"]) * HOURS - 2 * PRICES["gp3_node_month"],
         }
         out["scenarios"][k] = {**s, **extra, "avg_concurrency": concurrency(s), "agentcore_v1": agentcore(s, "v1", m1), "agentcore_v2": agentcore(s, "v2", m2), "microvm_always_running": microvm(s), "microvm_with_suspend": microvm(s, s["running_share"]), "eks_gvisor_autoscaled": ga, "eks_gvisor_peak": gp, "eks_kata_autoscaled": ka, "eks_kata_peak": kp, "nodes": {"gvisor_autoscaled": n1, "gvisor_peak": n2, "kata_autoscaled": n3, "kata_peak": n4}, "sandboxes_per_node": {"gvisor": pn1, "kata": pn3}}
     # Break-even: concurrent sessions where autoscaled gVisor on EKS equals AgentCore V2, for the interactive shape.
@@ -167,7 +203,7 @@ def main():
     (ROOT / "results" / "cost_model.json").write_text(json.dumps(out, indent=1))
     print(json.dumps(out["measured_inputs"]))
     for k, v in out["scenarios"].items():
-        print(k, f"conc={v['avg_concurrency']:.0f}", *(f"{m.replace('agentcore_','ac_').replace('microvm_','mv_').replace('eks_','')}={v[m]:,.0f}" for m in ("agentcore_v1", "agentcore_v2", "microvm_always_running", "microvm_with_suspend", "eks_gvisor_autoscaled", "eks_kata_autoscaled", "eks_gvisor_peak")))
+        print(k, f"conc={v['avg_concurrency']:.0f}", *(f"{m.replace('agentcore_','ac_').replace('microvm_','mv_').replace('eks_','')}={v[m]:,.0f}" for m in ("agentcore_v1", "agentcore_v2", "microvm_always_running", "microvm_with_suspend", "eks_gvisor_autoscaled", "eks_kata_autoscaled", "eks_gvisor_peak", "fargate", "nitro_auto_autoscaled")))
     print("break-even", be, be_peak, be_warm)
 
 

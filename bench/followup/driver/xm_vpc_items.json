@@ -1,0 +1,1 @@
+[{"backend": "xm-v-v1", "arm": "v1_vpc"}, {"backend": "xm-v-v2", "arm": "v2_vpc"}, {"backend": "xm-p-v1", "arm": "v1_public"}, {"backend": "xm-p-v2", "arm": "v2_public"}]

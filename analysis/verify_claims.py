@@ -153,8 +153,63 @@ claim("The first 8 crossed runs are slower on V2 than the pooled 12", C8["ac-v2"
 Q = F["fair"]["agent"]
 claim("V2 mapping: no run over 20 s after a quiet hour, 5 of 8 without", Q["ac-v2-pinq2|quiet2"]["slow_share"] == 0 and round(Q["ac-v2-q2|quiet2"]["slow_share"] * 8) == 5)
 claim("MicroVM mapping: first message p50 intervals overlap after a quiet hour", Q["lm-pinq2|quiet2"]["first_ci"][1] >= Q["lm-q2|quiet2"]["first_ci"][0])
-PR = F["fair"]["prewarm_rounds"]
-claim("Running the CLI before the snapshot is faster than none in each shuffled round", all(PR[f"{t}|{r}"]["prewarm"] < PR[f"{t}|{r}"]["plain"] for t in ("ac-v2", "lm") for r in ("r1", "r2", "r3")))
+# Follow-ups (results/followup.json, embedded as F["fu"])
+U = F["fu"]
+lo = lambda v: v["ci"][0]
+hi = lambda v: v["ci"][1]
+SD = U["sdk"]
+claim("SDKs: Strands reaches its first model event sooner than the Claude Agent SDK on V2 and MicroVM, intervals apart", all(hi(SD[f"{p}|s"]["ready"]) < lo(SD[f"{p}|c"]["ready"]) for p in ("v2", "lm")))
+claim("SDKs: no failed run", U["sdk_failed"] == 0)
+SZ = U["size"]
+claim("File size: first read p50 grows with size on V2 and MicroVM", all(SZ[f"{p}|10"]["p50"] < SZ[f"{p}|50"]["p50"] < SZ[f"{p}|100"]["p50"] < SZ[f"{p}|200"]["p50"] for p in ("v2", "lm")))
+claim("File size: V1 first read stays under 0.1 s at every size", all(SZ[f"v1|{m}"]["max"] < 0.1 for m in (10, 50, 100, 200)))
+M = U["mitigation"]
+claim("Mitigations: mapping and S3 leave no run over 20 s on V2 and MicroVM", all(M[k]["first"]["over20"] == 0 for k in ("v2_map", "v2_s3", "lm_map", "lm_s3")))
+claim("Mitigations: mapping and S3 beat none with intervals apart", all(hi(M[f"{p}_{k}"]["first"]) < lo(M[f"{p}_none"]["first"]) for p in ("v2", "lm") for k in ("map", "s3")))
+claim("Mitigations: periodic warm-up beats none with intervals apart", all(hi(M[k]["first"]) < lo(M["v2_none"]["first"]) for k in ("v2_w5k1", "v2_w10k4")))
+claim("Mitigations: mapping beats periodic warm-up on V2", M["v2_map"]["first"]["p50"] < min(M["v2_w5k1"]["first"]["p50"], M["v2_w10k4"]["first"]["p50"]))
+claim("Mitigations: running the CLI before the snapshot is not faster than none", M["v2_pre"]["first"]["p50"] >= lo(M["v2_none"]["first"]))
+claim("Mitigations: mapping and S3 bill no more memory per probe session than none", all(M[k]["usage"]["gb_hours_per_probe_session"] <= M["v2_none"]["usage"]["gb_hours_per_probe_session"] for k in ("v2_map", "v2_s3")))
+claim("Mitigations: warm-up adds under one cent an hour per runtime", all(0 < M[k]["usage"]["extra_usd_per_h"] < 0.01 for k in ("v2_w5k1", "v2_w10k4")))
+IS = U["iso"]
+claim("Warming: the warmed runtime beats every other arm with intervals apart", all(hi(IS["warmed"]) < lo(IS[k]) for k in ("same_image", "same_bytes", "alone", "untouched")))
+claim("Warming: a runtime next to a warmed one is no faster than one on its own", lo(IS["same_image"]) <= hi(IS["alone"]) and lo(IS["same_bytes"]) <= hi(IS["alone"]))
+NW = U["network"]
+claim("Network mode: VPC and public intervals overlap on V1 and V2", all(lo(NW[f"{v}_vpc"]["whole"]) <= hi(NW[f"{v}_public"]["whole"]) and lo(NW[f"{v}_public"]["whole"]) <= hi(NW[f"{v}_vpc"]["whole"]) for v in ("v1", "v2")))
+BD = U["build"]
+claim("Build: gVisor and V1 overlap", lo(BD["gvisor"]["whole"]) <= hi(BD["v1"]["whole"]) and lo(BD["v1"]["whole"]) <= hi(BD["gvisor"]["whole"]))
+claim("Build: gVisor and V1 beat MicroVM, Kata and V2 with intervals apart", all(max(hi(BD["gvisor"]["whole"]), hi(BD["v1"]["whole"])) < lo(BD[k]["whole"]) for k in ("lm", "kata", "v2")))
+claim("Build: V2 is slowest, also after the first message", all(lo(BD["v2"]["whole"]) > hi(BD[k]["whole"]) for k in BD if k != "v2") and all(lo(BD["v2"]["after_first"]) > hi(BD[k]["after_first"]) for k in BD if k != "v2"))
+claim("Build: no failure, every pytest passed", all(v["failed"] == 0 and v["pytest_failed"] == 0 for v in BD.values()))
+CN = U["conc"]
+claim("Concurrency: no failure and every pytest passed", all(v["failed"] == 0 and v["pytest_failed"] == 0 for v in CN.values()))
+claim("Concurrency: 20 at once is within 1.5 s of 5 at once on every option", all(CN[f"{k}|20"]["whole"]["p50"] - CN[f"{k}|5"]["whole"]["p50"] < 1.5 for k in ("gvisor", "kata", "v1", "v2", "lm")))
+SCY = U["store_cycle"]
+claim("Session storage: file kept and /tmp empty on every restart", SCY["file_kept"] == SCY["cycles"] == SCY["new_vm"] and SCY["cycles"] >= 10)
+claim("Session storage: CLI in storage gives a first message under 5 s on every restart", U["store"]["store|resume"]["first"]["max"] < 5)
+KT = U["kp_trace"]
+claim("Karpenter: default consolidation ends sessions, do-not-disrupt ends none", KT["default"]["lost"] > 0 and KT["keep"]["lost"] == 0 and KT["default"]["errors"] == KT["keep"]["errors"] == 0)
+claim("Karpenter: do-not-disrupt costs more node hours per session hour", KT["keep"]["node_h_per_pod_h"] > KT["default"]["node_h_per_pod_h"])
+claim("Karpenter: every scale-from-zero run had all pods ready", all(v["ok"] for v in U["kp_scale"].values()))
+TK = U["tokyo"]
+claim("Tokyo: V1 is fastest at low rate and slowest of the managed at 5 per second", TK["cold"]["v1"]["p50"] == min(v["p50"] for v in TK["cold"].values()) and TK["sus5"]["v1"]["p50"] > TK["sus5"]["v2"]["p50"])
+claim("Tokyo: V2 first message p50 is above every other option's p90", all(TK["agent"]["v2"]["first"]["p50"] > TK["agent"][k]["first"]["p90"] for k in ("v1", "gv", "kt")))
+claim("Tokyo: no failed request", all(v.get("failed", 0) == 0 for v in TK["sus5"].values()) and all(v["failed"] == 0 for v in TK["burst"].values()) and all(v["failed"] == 0 for v in TK["agent"].values()))
+
+NX = U["new"]
+FG, NT, NA = NX["fg"], NX["nt"], NX["na"]
+ag = lambda b: [v for blk in ("agent", "heavy", "conc") for v in b.get(blk, {}).values()]
+claim("Fargate and Nitro: no failed agent, build or concurrency run, every pytest passed", all(v["failed"] == 0 and v["pytest_failed"] == 0 for b in (FG, NT, NA) for v in ag(b)))
+claim("Fargate and Nitro: no failed start, burst or arrival", all(v["failed"] == 0 for b in (FG, NT, NA) for v in b["cold"].values()) and all(r["failed"] == 0 for b in (FG, NT) for v in b["burst"].values() for rr in v.values() for r in rr) and all(x["failed"] == 0 for b in (FG, NT) for v in b["sustained"].values() for x in v.values()))
+claim("Fargate: start is over 45 s at both sizes and every rate", all(FG["cold"][k]["p50"] > 45 for k in ("fg-fs", "fg-fb")) and all(x["p50"] > 45 for x in FG["sustained"]["fg-fs"].values()))
+claim("Fargate: agent time after start within 1 s of gVisor in the same period", abs(FG["agent"]["fargate"]["agent"] - FG["agent"]["gvisor"]["agent"]) < 1)
+claim("Nitro: starts slower than gVisor and within 1 s of Kata in the same period", NT["cold"]["nt-c"]["p50"] > NA["cold"]["na-gv"]["p50"] and abs(NT["cold"]["nt-c"]["p50"] - NA["cold"]["na-kt"]["p50"]) < 1)
+claim("Nitro: warm pool claim under 200 ms", NT["cold"]["nt-w"]["p50"] < 0.2)
+claim("Nitro: syscalls within 1.5x of runc and far below gVisor and Kata", all(NT["suite"]["nt-b"]["syscalls"][k] < 1.5 * F[f"sys.rc.{k}"] for k in ("getppid_ns", "open_close_ns", "fork_exec_ns")) and NT["suite"]["nt-b"]["syscalls"]["getppid_ns"] * 10 < F["sys.gv.getppid_ns"] and NT["suite"]["nt-b"]["syscalls"]["open_close_ns"] * 10 < F["sys.kt.open_close_ns"])
+claim("Nitro: build between gVisor and Kata of its period", lo(NA["heavy"]["gvisor"]["whole"]) <= NT["heavy"]["nitro"]["whole"]["p50"] <= hi(NA["heavy"]["kata"]["whole"]))
+claim("Nitro: 5 per second is over 5x slower than 1 per second", NT["sustained"]["nt-c"]["5.0"]["p50"] > 5 * NT["sustained"]["nt-c"]["1.0"]["p50"])
+claim("Nitro: pause and resume kept the file and lost memory every time", NT["pause_resume"]["failed"] == 0 and NT["pause_resume"]["disk_kept"] == NT["pause_resume"]["cycles"] and NT["pause_resume"]["memory_kept"] == 0)
+claim("Nitro: guest kernel differs from the host kernel", NT["census"]["nt-b"][list(NT["census"]["nt-b"])[0]]["kernel"] != NT["nodeinfo"]["kernel"])
 
 print(f"\n{checked - len(fails)}/{checked} claims hold")
 raise SystemExit(1 if fails else 0)

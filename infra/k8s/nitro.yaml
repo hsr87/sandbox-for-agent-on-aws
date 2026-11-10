@@ -1,0 +1,54 @@
+# Nitro Sandboxes cluster (EKS Auto Mode). Apply with the account ID substituted for ACCOUNT_ID.
+# Sandbox nodes use the same instance type and zone as the x86 node groups of the main cluster.
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata: { name: nitro }
+spec:
+  template:
+    metadata:
+      labels: { bench/group: x86-nitro }
+    spec:
+      nodeClassRef: { group: eks.amazonaws.com, kind: NodeClass, name: default }
+      requirements:
+      - { key: node.kubernetes.io/instance-type, operator: In, values: [m8i.2xlarge] }
+      - { key: topology.kubernetes.io/zone, operator: In, values: [us-east-1a] }
+      - { key: karpenter.sh/capacity-type, operator: In, values: [on-demand] }
+      taints: [{ key: bench/nitro, value: "true", effect: NoSchedule }]
+  limits: { cpu: "400" }
+  disruption:
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 10m
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: sandboxes }
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: bench }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: sandbox, namespace: sandboxes }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: driver, namespace: bench }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: bench-driver-admin }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: cluster-admin }
+subjects: [{ kind: ServiceAccount, name: driver, namespace: bench }]
+---
+apiVersion: v1
+kind: Pod
+metadata: { name: ndriver, namespace: bench }
+spec:
+  serviceAccountName: driver
+  nodeSelector: { topology.kubernetes.io/zone: us-east-1a, karpenter.sh/nodepool: general-purpose }
+  containers:
+  - name: driver
+    image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/sbx-bench/agent:driver
+    command: ["sleep", "infinity"]
+    resources: { requests: { cpu: "1", memory: 2Gi } }

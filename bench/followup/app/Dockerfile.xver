@@ -1,0 +1,8 @@
+ARG BASE
+FROM ${BASE}
+ARG VER
+ARG PRE=
+RUN pip install -q --no-cache-dir "claude-agent-sdk==${VER}"
+COPY x_pre_entry.py /app/x_pre_entry.py
+ENV X_PRE=${PRE}
+CMD ["python", "/app/x_pre_entry.py"]

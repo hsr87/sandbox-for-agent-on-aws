@@ -1,0 +1,6 @@
+ARG BASE
+FROM ${BASE}
+RUN pip install --no-cache-dir -q strands-agents==1.64.0
+COPY x_entry.py /app/x_entry.py
+ENV PING_NO_TIMESTAMP=1
+CMD ["python", "/app/x_entry.py"]

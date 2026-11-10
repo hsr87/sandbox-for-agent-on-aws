@@ -1,0 +1,9 @@
+# Service account for sandbox pods on EKS Fargate. Pod Identity does not run on Fargate, so this uses IRSA.
+# Replace ACCOUNT_ID, or use the sandbox_fargate_role output of infra/terraform.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sandbox-fargate
+  namespace: sandboxes
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/sbx-bench-sandbox-fargate

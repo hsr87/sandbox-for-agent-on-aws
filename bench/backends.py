@@ -154,19 +154,30 @@ def _k8s():
     return client
 
 
-def pod_spec(image, group, runtime_class, env=None):
+def pod_spec(image, group, runtime_class, env=None, fargate=None, size=None):
+    """fargate: None for EC2 nodes, or {"cpu": ..., "memory": ...}. Fargate sizes the microVM from requests and ignores limits."""
+    res = {"requests": {"cpu": "250m", "memory": "512Mi"}, "limits": {"cpu": "2", "memory": "8Gi"}}
+    if fargate:
+        res = {"requests": dict(fargate), "limits": dict(fargate)}
+    if size:
+        # Nitro Sandboxes also size the VM from requests, so requests equal limits here.
+        res = {"requests": dict(size), "limits": dict(size)}
     spec = {
-        "serviceAccountName": "sandbox",
-        "nodeSelector": {"bench/group": group},
+        "serviceAccountName": "sandbox-fargate" if fargate else "sandbox",
         "tolerations": [],
         "containers": [{
             "name": "agent", "image": image, "imagePullPolicy": "IfNotPresent",
             "ports": [{"containerPort": 8080}],
             "env": env or [],
-            "resources": {"requests": {"cpu": "250m", "memory": "512Mi"}, "limits": {"cpu": "2", "memory": "8Gi"}},
+            "resources": res,
             "readinessProbe": {"httpGet": {"path": "/ping", "port": 8080}, "periodSeconds": 1, "failureThreshold": 600},
         }],
     }
+    if group:
+        spec["nodeSelector"] = {"bench/group": group}
+    if group == "x86-nitro":
+        # Nitro Sandbox nodes on the Auto Mode cluster are tainted so that only sandbox pods land there.
+        spec["tolerations"] = [{"key": "bench/nitro", "operator": "Exists", "effect": "NoSchedule"}]
     if runtime_class:
         spec["runtimeClassName"] = runtime_class
     return spec
@@ -176,8 +187,8 @@ class EksCold:
     """Creates a Sandbox object per request. Nothing is pre-warmed."""
     poll = 0.05
 
-    def __init__(self, name, image, group, runtime_class, env=None):
-        self.name, self.image, self.group, self.rc, self.env = name, image, group, runtime_class, env
+    def __init__(self, name, image, group, runtime_class, env=None, fargate=None, size=None):
+        self.name, self.image, self.group, self.rc, self.env, self.fargate, self.size = name, image, group, runtime_class, env, fargate, size
         self.k = _k8s()
         self.co, self.core = self.k.CustomObjectsApi(), self.k.CoreV1Api()
         self.http = requests.Session()
@@ -185,7 +196,7 @@ class EksCold:
     def create(self):
         n = "c-" + uuid.uuid4().hex[:12]
         t0 = now()
-        body = {"apiVersion": "agents.x-k8s.io/v1beta1", "kind": "Sandbox", "metadata": {"name": n, "labels": {"bench": self.name}}, "spec": {"podTemplate": {"metadata": {"labels": {"bench": self.name}}, "spec": pod_spec(self.image, self.group, self.rc, self.env)}}}
+        body = {"apiVersion": "agents.x-k8s.io/v1beta1", "kind": "Sandbox", "metadata": {"name": n, "labels": {"bench": self.name}}, "spec": {"podTemplate": {"metadata": {"labels": {"bench": self.name, **({"bench/compute": "fargate"} if self.fargate else {})}}, "spec": pod_spec(self.image, self.group, self.rc, self.env, self.fargate, self.size)}}}
         self.co.create_namespaced_custom_object("agents.x-k8s.io", "v1beta1", NS, "sandboxes", body)
         h = Handle(n=n, t0=t0, ip=None)
         h.marks["api_return"] = now() - t0
@@ -307,7 +318,9 @@ def make(name, dep):
     if k == "microvm":
         return Microvm(name, s["image"], dep["microvm_exec_role"], idle=s.get("idle"))
     if k == "eks_cold":
-        return EksCold(name, s["image"], s["group"], s.get("runtime_class"), s.get("env"))
+        return EksCold(name, s["image"], s["group"], s.get("runtime_class"), s.get("env"), size=s.get("size"))
+    if k == "eks_fargate":
+        return EksCold(name, s["image"], None, None, s.get("env"), fargate={"cpu": s["cpu"], "memory": s["memory"]})
     if k == "eks_warm":
         return EksWarm(name, s["pool"])
     raise ValueError(k)

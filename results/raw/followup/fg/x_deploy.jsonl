@@ -1,0 +1,1 @@
+{"exp": "x_deploy", "round": "fg", "ts": 1794293305.2580495, "backend": "fg-v1", "spec": {"name": "fg-v1", "round": "fg", "kind": "agentcore", "tag": "x1f-arm64", "ver": "V1"}, "seconds": 6.090272128931247, "status": "READY", "reason": null}

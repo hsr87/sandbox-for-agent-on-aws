@@ -1,0 +1,1 @@
+[{"backend": "tk-t-v2", "arm": "v2", "platform": "v2", "body": {"op": "x_warm_cli"}}, {"backend": "tk-t-v1", "arm": "v1", "platform": "v1", "body": {"op": "x_warm_cli"}}]

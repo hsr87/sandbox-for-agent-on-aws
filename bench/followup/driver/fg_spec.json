@@ -1,0 +1,4 @@
+[{"name": "fg-gv", "round": "fg", "kind": "eks_cold", "tag": "x1f-amd64", "group": "x86-gvisor", "runtime_class": "gvisor"},
+ {"name": "fg-v1", "round": "fg", "kind": "agentcore", "tag": "x1f-arm64", "ver": "V1"},
+ {"name": "fg-fs", "round": "fg", "kind": "eks_fargate", "tag": "x1f-amd64", "cpu": "250m", "memory": "512Mi"},
+ {"name": "fg-fb", "round": "fg", "kind": "eks_fargate", "tag": "x1f-amd64", "cpu": "2", "memory": "7680Mi"}]

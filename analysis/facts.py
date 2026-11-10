@@ -181,6 +181,8 @@ def build():
     f["observability"] = s["observability"]
     f["cost"] = c
     f["sysinfo"] = s["sysinfo"]
+    fu = ROOT / "results" / "followup.json"
+    f["fu"] = json.loads(fu.read_text()) if fu.exists() else {}
     return f
 
 

@@ -42,6 +42,10 @@ spec:
     spec:
       hostPID: true
       nodeSelector: {}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms: [{ matchExpressions: [{ key: eks.amazonaws.com/compute-type, operator: NotIn, values: [fargate] }] }]
       tolerations: [{ operator: Exists }]
       containers:
       - name: h

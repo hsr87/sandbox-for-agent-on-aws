@@ -1,0 +1,1 @@
+[{"name": "xf2-image", "round": "xf2", "tag": "x1d-arm64", "kind": "agentcore", "ver": "V2", "storage": true}, {"name": "xf2-store", "round": "xf2", "tag": "x1d-arm64", "kind": "agentcore", "ver": "V2", "storage": true}, {"name": "xf2-tmp", "round": "xf2", "tag": "x1d-arm64", "kind": "agentcore", "ver": "V2", "storage": true}]

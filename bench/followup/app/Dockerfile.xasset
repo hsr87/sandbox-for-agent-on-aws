@@ -1,0 +1,5 @@
+ARG BASE
+ARG MB
+FROM ${BASE}
+ARG MB
+RUN head -c $((MB*1024*1024)) /dev/urandom > /opt/asset.bin

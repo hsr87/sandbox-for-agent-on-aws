@@ -1,0 +1,2 @@
+[{"name": "na-gv", "round": "nt", "kind": "eks_cold", "tag": "x1f-amd64", "group": "x86-gvisor", "runtime_class": "gvisor"},
+ {"name": "na-kt", "round": "nt", "kind": "eks_cold", "tag": "x1f-amd64", "group": "x86-kata", "runtime_class": "kata-qemu-runtime-rs"}]
